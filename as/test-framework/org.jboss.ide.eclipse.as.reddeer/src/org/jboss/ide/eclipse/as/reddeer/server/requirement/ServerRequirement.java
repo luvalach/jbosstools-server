@@ -8,8 +8,6 @@ import java.lang.annotation.Target;
 import org.jboss.ide.eclipse.as.reddeer.server.family.FamilyEAP;
 import org.jboss.ide.eclipse.as.reddeer.server.family.FamilyWildFly;
 import org.jboss.ide.eclipse.as.reddeer.server.requirement.ServerRequirement.JBossServer;
-import org.jboss.ide.eclipse.as.reddeer.server.view.JBossServerView;
-import org.jboss.reddeer.eclipse.wst.server.ui.wizard.NewServerWizardDialog;
 import org.jboss.ide.eclipse.as.reddeer.server.wizard.page.JBossRuntimeWizardPage;
 import org.jboss.ide.eclipse.as.reddeer.server.wizard.page.NewServerAdapterPage;
 import org.jboss.ide.eclipse.as.reddeer.server.wizard.page.NewServerAdapterPage.Profile;
@@ -18,16 +16,15 @@ import org.jboss.ide.eclipse.as.reddeer.server.wizard.page.NewServerWizardPageWi
 import org.jboss.reddeer.common.exception.RedDeerException;
 import org.jboss.reddeer.common.logging.Logger;
 import org.jboss.reddeer.eclipse.rse.ui.view.System;
-import org.jboss.reddeer.eclipse.rse.ui.view.SystemView;
-import org.jboss.reddeer.eclipse.rse.ui.wizard.NewConnectionWizardDialog;
-import org.jboss.reddeer.eclipse.rse.ui.wizard.NewConnectionWizardMainPage;
-import org.jboss.reddeer.eclipse.rse.ui.wizard.NewConnectionWizardSelectionPage;
-import org.jboss.reddeer.eclipse.rse.ui.wizard.NewConnectionWizardSelectionPage.SystemType;
-import org.jboss.reddeer.eclipse.wst.server.ui.view.ServersView;
+import org.jboss.reddeer.eclipse.rse.ui.view.SystemViewPart;
+import org.jboss.reddeer.eclipse.rse.ui.wizards.newconnection.RSEDefaultNewConnectionWizardMainPage;
+import org.jboss.reddeer.eclipse.rse.ui.wizards.newconnection.RSEMainNewConnectionWizard;
+import org.jboss.reddeer.eclipse.rse.ui.wizards.newconnection.RSENewConnectionWizardSelectionPage;
+import org.jboss.reddeer.eclipse.rse.ui.wizards.newconnection.RSENewConnectionWizardSelectionPage.SystemType;
+import org.jboss.reddeer.eclipse.wst.server.ui.wizard.NewServerWizard;
 import org.jboss.reddeer.junit.requirement.CustomConfiguration;
 import org.jboss.reddeer.junit.requirement.Requirement;
 import org.jboss.reddeer.requirements.server.ConfiguredServerInfo;
-import org.jboss.reddeer.requirements.server.IServerReqConfig;
 import org.jboss.reddeer.requirements.server.ServerReqBase;
 import org.jboss.reddeer.requirements.server.ServerReqState;
 
@@ -73,24 +70,19 @@ public class ServerRequirement extends ServerReqBase implements Requirement<JBos
 		if(lastServerConfiguration != null) {
 			boolean differentConfig = !config.equals(lastServerConfiguration.getConfig());
 			if (differentConfig) {
-				removeLastRequiredServerAndRuntime(lastServerConfiguration);
+				removeLastRequiredServerAndRuntime();
 				lastServerConfiguration = null;
 			}
 		}
-		if (lastServerConfiguration == null || !isLastConfiguredServerPresent(lastServerConfiguration)) {
+		if (lastServerConfiguration == null || !isLastConfiguredServerPresent()) {
 			LOGGER.info("Setup server");
 			if(config.getRemote() == null)
 				setupLocalServerAdapter();
 			else
 				setupRemoteServerAdapter();
-			lastServerConfiguration = new ConfiguredServerInfo(getServerNameLabelText(config), config);
+			lastServerConfiguration = new ConfiguredServerInfo(getServerNameLabelText(), config);
 		}
-		setupServerState(server.state(), lastServerConfiguration);
-	}
-	
-	@Override
-	protected ServersView createServersView() {
-		return new JBossServerView();
+		setupServerState(server.state());
 	}
 	
 	@Override
@@ -111,7 +103,7 @@ public class ServerRequirement extends ServerReqBase implements Requirement<JBos
 	@Override
 	public void cleanUp() {
 		if(server.cleanup() && config != null){
-			removeLastRequiredServerAndRuntime(lastServerConfiguration);
+			removeLastRequiredServerAndRuntime();
 			lastServerConfiguration = null;
 		}
 	}
@@ -121,21 +113,21 @@ public class ServerRequirement extends ServerReqBase implements Requirement<JBos
 	}
 	
 	@Override
-	public String getServerNameLabelText(IServerReqConfig config) {
+	public String getServerNameLabelText() {
 		if(this.config.getRemote() == null)
-			return super.getServerNameLabelText(config);
+			return super.getServerNameLabelText();
 		else
-			return super.getServerTypeLabelText(config) + " Remote Server";
+			return super.getServerTypeLabelText() + " Remote Server";
 	}
 	
 	protected void setupLocalServerAdapter() {
-		NewServerWizardDialog serverW = new NewServerWizardDialog();
+		NewServerWizard serverW = new NewServerWizard();
 		try {
 			serverW.open();
 
 			NewServerWizardPageWithErrorCheck sp = new NewServerWizardPageWithErrorCheck();
 			
-			String serverTypeLabelText = getServerTypeLabelText(config);
+			String serverTypeLabelText = getServerTypeLabelText();
 			
 			//workaround for JBIDE-20548
 			if(FamilyWildFly.class.equals(config.getServerFamily().getClass())){
@@ -159,7 +151,7 @@ public class ServerRequirement extends ServerReqBase implements Requirement<JBos
 				}
 			}
 			sp.selectType(config.getServerFamily().getCategory(), serverTypeLabelText);
-			sp.setName(getServerNameLabelText(config));
+			sp.setName(getServerNameLabelText());
 
 			sp.checkErrors();
 
@@ -194,7 +186,7 @@ public class ServerRequirement extends ServerReqBase implements Requirement<JBos
 	protected void setupRuntime(){
 		
 		JBossRuntimeWizardPage rp = new JBossRuntimeWizardPage();
-		rp.setRuntimeName(getRuntimeNameLabelText(config));
+		rp.setRuntimeName(getRuntimeNameLabelText());
 		rp.setRuntimeDir(config.getRuntime());
 
 		rp.checkErrors();
@@ -203,12 +195,12 @@ public class ServerRequirement extends ServerReqBase implements Requirement<JBos
 
 	protected void setupRemoteSystem(){
 		
-		SystemView sview = new SystemView();
-		NewConnectionWizardDialog connW = sview.newConnection();
-		NewConnectionWizardSelectionPage sp = new NewConnectionWizardSelectionPage();
+		SystemViewPart sview = new SystemViewPart();
+		RSEMainNewConnectionWizard connW = sview.newConnection();
+		RSENewConnectionWizardSelectionPage sp = new RSENewConnectionWizardSelectionPage();
 		sp.selectSystemType(SystemType.SSH_ONLY);
 		connW.next();
-		NewConnectionWizardMainPage mp = new NewConnectionWizardMainPage();
+		RSEDefaultNewConnectionWizardMainPage mp = new RSEDefaultNewConnectionWizardMainPage();
 		mp.setHostName(config.getRemote().getHost());
 		connW.finish();
 		
@@ -220,7 +212,7 @@ public class ServerRequirement extends ServerReqBase implements Requirement<JBos
 	}
 	
 	protected void setupRemoteServerAdapter() {
-		NewServerWizardDialog serverW = new NewServerWizardDialog();
+		NewServerWizard serverW = new NewServerWizard();
 		try {
 			//setup remote system first
 			setupRemoteSystem();
@@ -229,8 +221,8 @@ public class ServerRequirement extends ServerReqBase implements Requirement<JBos
 			serverW.open();
 			//-- Select the server type and fill in server name, then continue on next page
 			NewServerWizardPageWithErrorCheck sp = new NewServerWizardPageWithErrorCheck();
-			sp.selectType(config.getServerFamily().getCategory(),getServerTypeLabelText(config));
-			sp.setName(getServerNameLabelText(config));
+			sp.selectType(config.getServerFamily().getCategory(),getServerTypeLabelText());
+			sp.setName(getServerNameLabelText());
 			sp.checkErrors();
 			serverW.next();
 			
@@ -260,6 +252,11 @@ public class ServerRequirement extends ServerReqBase implements Requirement<JBos
 			serverW.cancel();
 			throw e;
 		}
+	}
+
+	@Override
+	public ConfiguredServerInfo getConfiguredConfig() {
+		return lastServerConfiguration;
 	}
 
 }

@@ -11,10 +11,11 @@ import org.jboss.reddeer.common.logging.Logger;
 import org.jboss.reddeer.common.wait.TimePeriod;
 import org.jboss.reddeer.common.wait.WaitUntil;
 import org.jboss.reddeer.eclipse.ui.console.ConsoleView;
+import org.jboss.reddeer.eclipse.wst.server.ui.cnf.AbstractServer;
+import org.jboss.reddeer.eclipse.wst.server.ui.cnf.Server;
+import org.jboss.reddeer.eclipse.wst.server.ui.cnf.ServerModule;
+import org.jboss.reddeer.eclipse.wst.server.ui.cnf.ServersView2;
 import org.jboss.reddeer.eclipse.wst.server.ui.editor.ServerEditor;
-import org.jboss.reddeer.eclipse.wst.server.ui.view.Server;
-import org.jboss.reddeer.eclipse.wst.server.ui.view.ServerModule;
-import org.jboss.reddeer.eclipse.wst.server.ui.view.ServersView;
 import org.jboss.reddeer.swt.api.Shell;
 import org.jboss.reddeer.swt.api.TreeItem;
 import org.jboss.reddeer.swt.exception.SWTLayerException;
@@ -28,14 +29,14 @@ import org.jboss.reddeer.swt.impl.shell.DefaultShell;
  * @author Lucia Jelinkova
  *
  */
-public class JBossServer extends Server {
+public class JBossServer extends AbstractServer {
 
 	public static final String XML_LABEL_DECORATION_SEPARATOR = "   ";
 	
 	private static final Logger log = Logger.getLogger(JBossServer.class);
 
-	protected JBossServer(TreeItem treeItem, ServersView view) {
-		super(treeItem, view);
+	protected JBossServer(TreeItem treeItem) {
+		super(treeItem);
 	}
 
 	@Override
@@ -126,6 +127,7 @@ public class JBossServer extends Server {
 		return configurations;
 	}
 
+	/*
 	@Override
 	protected ServerEditor createServerEditor(String title) {
 		return new JBossServerEditor(title);
@@ -135,7 +137,7 @@ public class JBossServer extends Server {
 	protected ServerModule createServerModule(TreeItem item) {
 		return new JBossServerModule(item, view);
 	}
-
+*/
 	private void checkServerAlreadyRunningDialog() {
 		try {
 			Shell shell = new DefaultShell("Server already running on localhost");

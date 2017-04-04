@@ -10,5 +10,13 @@
 	<groupId>org.jboss.ide.eclipse.as</groupId>
 	<artifactId>org.jboss.ide.eclipse.as.reddeer</artifactId>
 	<packaging>eclipse-plugin</packaging>
+	
+	<repositories>
+			<repository>
+			<id>reddeer</id>
+			<layout>p2</layout>
+			<url>http://download.jboss.org/jbosstools/neon/snapshots/builds/reddeer_master/</url>
+		</repository>
+	</repositories>
 
 </project>
