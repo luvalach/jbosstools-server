@@ -109,7 +109,7 @@ public class JBossServer extends AbstractServer {
 		List<TreeItem> configurationItems = categoryItem.getItems();
 		
 		// does not work on AS 4.0
-		new WaitUntil(new TreeItemLabelDecorated(configurationItems.get(0)), TimePeriod.NORMAL, false);
+		new WaitUntil(new TreeItemLabelDecorated(configurationItems.get(0)), TimePeriod.DEFAULT, false);
 		
 		// does not work on AS 3.2
 		new WaitUntil(new TreeItemLabelDecorated(configurationItems.get(configurationItems.size() - 1)), TimePeriod.NONE, false);
