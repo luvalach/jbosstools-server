@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
+import org.jboss.reddeer.core.handler.ComboHandler;
 import org.jboss.reddeer.jface.wizard.WizardPage;
 import org.jboss.reddeer.swt.api.Combo;
 import org.jboss.reddeer.swt.impl.button.CheckBox;
@@ -120,7 +121,7 @@ public class NewServerAdapterPage extends WizardPage {
 
 		@Override
 		protected boolean matchesSafely(org.eclipse.swt.widgets.Combo combo) {
-			for (String item : combo.getItems()){
+			for (String item : ComboHandler.getInstance().getItems(combo)){
 				if (item.trim().equals(NEW_RUNTIME_LABEL)){
 					return true;
 				}
